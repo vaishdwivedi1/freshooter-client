@@ -23,8 +23,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    localStorage.clear();
-
     return Promise.reject(error);
   }
 );

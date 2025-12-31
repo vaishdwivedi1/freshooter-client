@@ -44,12 +44,44 @@ const Checkout = () => {
     default: true,
   });
 
-  const subtotal = checkoutProducts?.reduce(
-    (sum, item) => sum + item.totalPrice,
-    0
-  );
+  const isVariantInCart = (cartItems, item) => {
+    return cartItems.some(
+      (c) =>
+        c.productCode === item.productCode &&
+        c.variantWeightValue === item.variantWeightValue &&
+        c.variantWeightUnit === item.variantWeightUnit
+    );
+  };
 
-  const handlePayment = () => {
+  const handleCart = async () => {
+    try {
+      // 1️ Get latest cart from backend
+      const cartRes = await services.get(StaticApi.getUserCart);
+      const cartItems = cartRes?.data?.items || [];
+
+      // 2️ Loop checkout products
+      for (const item of checkoutProducts) {
+        const exists = isVariantInCart(cartItems, item);
+
+        if (!exists) {
+          await services.post(
+            `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${item.quantity}&weightValue=${item.variantWeightValue}&weightUnit=${item.variantWeightUnit}`
+          );
+        }
+      }
+    } catch (err) {
+      toast.error("Failed to sync cart");
+      throw err;
+    }
+  };
+
+  const getOrders = async () => {
+    try {
+      await services.get(`${StaticApi.getMyOrders}`);
+    } catch (err) {}
+  };
+
+  const handlePayment = async () => {
     if (selectedAddress === null) {
       toast.error("Please select a delivery address");
       return;
@@ -64,19 +96,23 @@ const Checkout = () => {
       })),
     };
 
-    services
-      .post(StaticApi.placeOrder, payload)
-      .then((res) => {
-        console.log(res);
-        localStorage.removeItem("selectedCheckoutItems");
-        navigate(StaticRoutes.thankYou, {
-          state: { orderId: res?.data?.data?.orderId },
-        });
-        getCartItems();
-      })
-      .catch(() => {
-        toast.error("Failed to place order");
+    try {
+      // Ensure cart is synced
+      await handleCart();
+
+      const res = await services.post(StaticApi.placeOrder, payload);
+
+      localStorage.removeItem("selectedCheckoutItems");
+
+      navigate(StaticRoutes.thankYou, {
+        state: { orderId: res?.data?.data?.orderId },
       });
+
+      getCartItems();
+      getOrders();
+    } catch {
+      toast.error("Failed to place order");
+    }
   };
 
   const getCartItems = () => {

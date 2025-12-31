@@ -155,7 +155,7 @@ export default function Home() {
           1024: { slidesPerView: 6 },
         }}
         autoplay={{
-          delay: 2000,
+          delay: 3000,
           disableOnInteraction: false,
         }}
         loop={true}

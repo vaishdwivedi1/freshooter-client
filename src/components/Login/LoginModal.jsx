@@ -1,13 +1,12 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { toast } from "react-toastify";
+import { cartEvents } from "../../utils/commonFunctions";
 import { services } from "../../utils/services";
 import { StaticApi } from "../../utils/StaticApi";
-import { StaticRoutes } from "../../utils/StaticRoutes";
-import InpuField from "../InputFields/InpuField";
 import ButtonPrimary from "../Buttons/ButtonPrimary";
+import InpuField from "../InputFields/InpuField";
 
 export default function LoginModal({ open, onClose, onLoginSuccess }) {
   const navigate = useNavigate();
@@ -46,6 +45,7 @@ export default function LoginModal({ open, onClose, onLoginSuccess }) {
             localStorage.setItem("userName", response.data.userName);
             if (onLoginSuccess) onLoginSuccess();
             onClose();
+            cartEvents.refresh();
           } else {
           }
         })
