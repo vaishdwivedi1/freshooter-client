@@ -365,7 +365,6 @@ const Checkout = () => {
               );
 
               const change = newQty - item.quantity;
-              console.log(item);
 
               if (change > 0) {
                 services
@@ -545,7 +544,6 @@ const Checkout = () => {
         <AddCardModal
           onClose={() => setShowCardModal(false)}
           onSubmit={(cardData) => {
-            console.log("New Card:", cardData);
             setShowCardModal(false);
           }}
         />
@@ -673,7 +671,12 @@ const OrderItem = ({ item, onQuantityChange, onRemove }) => {
   return (
     <div className="flex gap-4 border rounded p-4 mb-4 shadow-sm w-max">
       {/* Image */}
-      <img src={getImageSrc(item)} alt={item?.productName} loading="lazy" />
+      <img
+        src={getImageSrc(item)}
+        alt={item?.productName}
+        loading="lazy"
+        className="w-[100px] h-[100px]"
+      />
       {/* Details */}
       <div className="flex flex-col justify-between flex-1">
         <div>

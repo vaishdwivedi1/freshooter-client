@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import masala from "../../assets/masala2.jpg";
+import { Autoplay } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 export default function FeatureCarousel({ heading, data }) {
   const navigate = useNavigate();
@@ -52,7 +51,7 @@ export default function FeatureCarousel({ heading, data }) {
             return (
               <SwiperSlide key={index} className="pb-[20px]">
                 <div
-                  onClick={() => handleNavigate(item.link)}
+                  onClick={() => handleNavigate(item.productCode)}
                   className="group p-3 bg-white shadow-md rounded-xl transition-all duration-300 hover:shadow-xl hover:scale-105 hover:border hover:border-primary cursor-pointer hover:bg-gradient-to-r from-tertiary to-primary"
                 >
                   {/* Image */}

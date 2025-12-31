@@ -11,6 +11,7 @@ import { useLocation, useNavigate } from "react-router";
 import { StaticRoutes } from "../utils/StaticRoutes";
 import { services } from "../utils/services";
 import { StaticApi } from "../utils/StaticApi";
+import { cartEvents } from "../utils/commonFunctions";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -24,7 +25,6 @@ export default function Header() {
   const [searchResults, setSearchResults] = useState([]);
 
   const handleProfileToggle = () => {
-    console.log("Comin");
     setIsProfileMenuOpen((prev) => !prev);
   };
 
@@ -106,6 +106,7 @@ export default function Header() {
     const updateCart = () => getCartItems();
 
     document.addEventListener("cartUpdated", updateCart);
+    cartEvents.refresh();
 
     return () => {
       document.removeEventListener("cartUpdated", updateCart);

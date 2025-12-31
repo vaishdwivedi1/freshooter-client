@@ -45,7 +45,6 @@ export default function Home() {
     services
       .get(StaticApi.getAllActivateProduct)
       .then((response) => {
-        console.log(response);
         if (Array.isArray(response?.data)) {
           const mapped = response.data.map((item) => ({
             ...item,
@@ -189,7 +188,7 @@ export default function Home() {
       <div className="w-full flex flex-col gap-5">
         <FeatureCarousel heading={"New Products"} data={products} />
         {/* <FeatureCarousel heading={"Featured Products"} data={products} /> */}
-        {bestSellingProducts && (
+        {bestSellingProducts?.length > 0 && (
           <FeatureCarousel
             heading={"Best Selling"}
             data={bestSellingProducts}

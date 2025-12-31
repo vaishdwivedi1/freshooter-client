@@ -32,7 +32,6 @@ export default function Orders() {
     setLoading(true);
     try {
       const res = await services.get(`${StaticApi.getMyOrders}`);
-      console.log(res);
       const formattedOrders = (res?.data || [])
         .map((order) => ({
           ...order,
@@ -133,93 +132,84 @@ export default function Orders() {
     if (!orderItems || orderItems.length === 0) return;
 
     try {
-      // First fetch complete product details for all items
-      const productsWithDetails = await Promise.all(
-        orderItems.map(async (item) => {
-          try {
-            const response = await services.get(
-              `${StaticApi.getProductByProductCode}/${item.productCode}`
-            );
-            return {
-              ...item,
-              productDetails: response?.data?.data || null,
-            };
-          } catch (error) {
-            return item; // Return original item if details fetch fails
-          }
-        })
-      );
+      const buyNowItems = [];
 
-      // Then add all items to cart with complete information
       await Promise.all(
-        productsWithDetails.map((item) =>
-          services.post(
+        orderItems.map(async (item) => {
+          // 1. Add to cart
+          await services.post(
             `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${
               item.quantity || 1
             }&weightValue=${item.variantWeightValue}&weightUnit=${
               item.variantWeightUnit
             }`
-          )
-        )
-      );
-
-      // Prepare items for checkout with complete details
-      const updatedItems = productsWithDetails.map((item) => {
-        // Find matching variant in product details
-        let variantPrice = item.price || 0;
-        let variantDiscount = 0;
-
-        if (item.productDetails?.productVariantBeans) {
-          const matchingVariant = item.productDetails.productVariantBeans.find(
-            (variant) =>
-              variant.weightValue === item.variantWeightValue &&
-              variant.weightUnit === item.variantWeightUnit
           );
 
-          if (matchingVariant) {
-            variantPrice = matchingVariant.price;
-            variantDiscount = matchingVariant.discount || 0;
-          }
-        }
+          const quantityValue = Number(item.quantity || 1);
+          const discountPercent = Number(item.discountPercentage || 0);
 
-        const baseItem = {
-          productId: item.productId,
-          productCode: item.productCode,
-          name:
-            item.productDetails?.name ||
-            item.productName ||
-            `Product ${item.productCode}`,
-          imageUrl: item.productDetails?.productImages?.[0] || dairydumm, // fallback image
-          price: variantPrice,
-          discount: variantDiscount,
-          quantity: item.quantity || 1,
-          totalPrice: variantPrice * (item.quantity || 1),
-          variantWeightValue: item.variantWeightValue,
-          variantWeightUnit: item.variantWeightUnit,
-        };
+          // derive variant price from total
+          const variantPrice =
+            quantityValue > 0 ? Number(item.totalAmount) / quantityValue : 0;
 
-        // Add additional details if available
-        if (item.productDetails) {
-          return {
-            ...baseItem,
-            description: item.productDetails.description,
-            category: item.productDetails.category,
-            brand: item.productDetails.brand,
-            // Add any other relevant product details
-          };
-        }
-        return baseItem;
-      });
+          const discountPrice = Number(
+            item.discountPrice || (variantPrice * discountPercent) / 100
+          );
 
-      localStorage.setItem(
-        "selectedCheckoutItems",
-        JSON.stringify(updatedItems)
+          const afterDiscountAmount = Number(
+            item.afterDiscountAmount || variantPrice - discountPrice
+          );
+
+          const shippingCharge = 0; // not present in orderItems
+          const gst = 0; // not present in orderItems
+
+          const payingAmount =
+            afterDiscountAmount * quantityValue + shippingCharge;
+
+          buyNowItems.push({
+            /* ---------------- PRODUCT ---------------- */
+            productId: item.productId,
+            productName: item.productName,
+            productCode: item.productCode,
+
+            /* ---------------- VARIANT ---------------- */
+            variantId: null,
+            variantWeightValue: item.variantWeightValue,
+            variantWeightUnit: item.variantWeightUnit,
+
+            /* ---------------- PRICING ---------------- */
+            variantPrice,
+            variantDiscount: discountPercent,
+            quantity: quantityValue,
+
+            totalQtyPrice: variantPrice * quantityValue,
+            discountPrice,
+            afterDiscountAmount,
+            payingAmount,
+
+            /* ---------------- TAX & SHIPPING ---------------- */
+            gst,
+            shippingCharge,
+
+            /* ---------------- MEDIA ---------------- */
+            variantImages: item.variantImages?.[0]?.url || "",
+
+            addedDate: new Date().toISOString(),
+          });
+        })
       );
 
-      // Navigate to checkout
+      // 2. Store EXACT SAME STRUCTURE used by checkout
+      localStorage.setItem(
+        "selectedCheckoutItems",
+        JSON.stringify(buyNowItems)
+      );
+
+      // 3. Continue normal flow
       navigate("/checkout");
     } catch (error) {
       console.error("Error during buy again:", error);
+      toast.error("Failed to reorder items");
     }
   };
 
