@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+
+* {
+    ::-webkit-scrollbar {
+        width: 0px;
+        height: 0px;
+    }
+
+    ::-webkit-scrollbar-track {
+        /* background: $secondary-color; */
+    }
+
+    ::-webkit-scrollbar-thumb {
+        /* background: $primary-color; */
+        /* border-radius: 100px; */
+    }
+
+    /* Handle on hover */
+
+}
+
+@theme {
+    --color-background-signin: hsl(120, 25%, 98%);
+    --color-foreground: hsl(120 10% 10%);
+    --color-primary: #429686;
+    --color-secondary: #ecc313;
+    --color-tertiary: #ff9933;
+    --color-quaternary: #e1e3ea;
+    --color-subText: #a1a1a4;
+    --color-tx-primary: white;
+    --font-montserrat: "Montserrat", sans-serif;
+}
+
+.test {
+    color: #4296879a;
+}
+
+@media (max-width: 399px) {
+    .custom-card {
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 1s ease-in-out forwards;
+}
+
+/* Fade Up Animation */
+@keyframes fadeUp {
+    0% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-up {
+    animation: fadeUp 1s ease-in-out forwards;
+}
+
+@keyframes wishlist-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.wishlist-bounce {
+  animation: wishlist-bounce 0.4s ease-in-out;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
