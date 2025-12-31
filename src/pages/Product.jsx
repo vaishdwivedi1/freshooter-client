@@ -297,7 +297,7 @@ export default function Product() {
   // Load product & variants
   useEffect(() => {
     getProductDetails();
-
+    cartEvents.refresh();
     checkIfWishlisted();
   }, [id]);
 
@@ -352,24 +352,33 @@ export default function Product() {
     }
 
     const variantPrice = Number(selectedVariant?.price || discountedPrice || 0);
-    const quantityValue = Number(quantity || 1);
-    const discount = Number(selectedVariant?.discount || 0);
 
-    const discountPrice = (variantPrice * discount) / 100;
+    const quantityValue = Number(quantity || 1);
+    const discountPercent = Number(selectedVariant?.discount || 0);
+
+    // discount calculations
+    const discountPrice = (variantPrice * discountPercent) / 100;
     const afterDiscountAmount = variantPrice - discountPrice;
-    const payingAmount = afterDiscountAmount * quantityValue;
+
+    // shipping charge (from variant)
+    const shippingCharge = Number(selectedVariant?.shippingCharge || 0);
+
+    const payingAmount = afterDiscountAmount * quantityValue + shippingCharge;
 
     const buyNowItem = {
+      /* ---------------- PRODUCT ---------------- */
       productId: product?.productId,
       productName: product?.name,
       productCode: selectedVariant?.productCode || product?.productCode,
 
-      variantId: selectedVariant?.variantId || null,
+      /* ---------------- VARIANT ---------------- */
+      variantId: selectedVariant?.variantId ?? null,
       variantWeightValue: selectedVariant?.weightValue,
       variantWeightUnit: selectedVariant?.weightUnit,
 
+      /* ---------------- PRICING ---------------- */
       variantPrice,
-      variantDiscount: discount,
+      variantDiscount: discountPercent,
       quantity: quantityValue,
 
       totalQtyPrice: variantPrice * quantityValue,
@@ -377,10 +386,14 @@ export default function Product() {
       afterDiscountAmount,
       payingAmount,
 
-      gst: 0,
-      shippingCharge: 0,
+      /* ---------------- TAX & SHIPPING ---------------- */
+      gst: Number(selectedVariant?.gst || 0),
+      shippingCharge,
 
-      variantImages: product?.productImages?.url || "",
+      /* ---------------- MEDIA ---------------- */
+      variantImages:
+        product?.productImages?.url || selectedVariant?.variantImages || "",
+
       addedDate: new Date().toISOString(),
     };
 
@@ -482,25 +495,23 @@ export default function Product() {
                 <span className="text-red-600">Out of Stock</span>
               )}
             </div>
-            {product?.reviews?.length ? (
-              reviews.map((review, index) => (
-                <div
-                  key={index}
-                  className="p-4 border border-quaternary rounded-lg bg-white"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-yellow-500">
-                      {"⭐".repeat(review.rating)}
-                    </span>
-                    <span className="text-sm text-gray-600">
-                      {review.userName}
-                    </span>
+            {product?.reviews?.length
+              ? reviews.map((review, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border border-quaternary rounded-lg bg-white"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-yellow-500">
+                        {"⭐".repeat(review.rating)}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        {review.userName}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500">No reviews yet</p>
-            )}
+                ))
+              : null}
           </div>
 
           {/* Weight Variant Buttons */}

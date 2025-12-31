@@ -20,10 +20,9 @@ export default function HomeHeroCrausal() {
   return (
     <div className="w-full ">
       <Swiper
-        navigation={true}
-        modules={[Navigation, Autoplay]}
+        modules={[Autoplay]}
         autoplay={{
-          delay: 2000,
+          delay: 3000,
           disableOnInteraction: false,
         }}
         loop={true}

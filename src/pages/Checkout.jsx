@@ -619,32 +619,57 @@ const PaymentMethodCard = ({ label, selected, onChange }) => (
 );
 
 const OrderItem = ({ item, onQuantityChange, onRemove }) => {
-  return (
-    <div className="flex gap-4 border rounded p-4 mb-4 shadow-sm max-w-[50%]">
-      {/* Image */}
-      <img
-        src={
-          item.imageUrl || item?.variantImages?.length
-            ? item?.variantImages?.[0]?.url
-            : item?.variantImages
-        }
-        alt={item.productName}
-        className="w-28 h-28 object-contain rounded"
-      />
+  const getImageSrc = (item) => {
+    if (typeof item?.variantImages === "string") {
+      return item.variantImages;
+    }
 
+    if (Array.isArray(item?.variantImages) && item.variantImages.length > 0) {
+      return item.variantImages[0]?.url;
+    }
+
+    if (item?.imageUrl) {
+      return item.imageUrl;
+    }
+
+    return "";
+  };
+  return (
+    <div className="flex gap-4 border rounded p-4 mb-4 shadow-sm w-max">
+      {/* Image */}
+      <img src={getImageSrc(item)} alt={item?.productName} loading="lazy" />
       {/* Details */}
       <div className="flex flex-col justify-between flex-1">
         <div>
           <h3 className="text-lg font-semibold">
             {item.name || item?.productName}
           </h3>
+
           <p className="text-sm text-gray-600 mt-1">
             Size: {item.variantWeightValue || "N/A"} {item.variantWeightUnit}
           </p>
 
-          <p className="text-xl font-bold mt-2">
-            ₹{item.price || item.totalPrice || item?.variantPrice}
-          </p>
+          {/* PRICE */}
+          <div className="mt-2 flex items-center gap-2">
+            {/* Final price */}
+            <span className="text-xl font-bold text-primary">
+              ₹{item.afterDiscountAmount ?? item.variantPrice}
+            </span>
+
+            {/* Cut price */}
+            {item.variantDiscount > 0 && (
+              <span className="text-sm text-gray-400 line-through">
+                ₹{item.variantPrice}
+              </span>
+            )}
+
+            {/* Discount badge */}
+            {item.variantDiscount > 0 && (
+              <span className="text-xs font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded">
+                {item.variantDiscount}% OFF
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-3 mt-4">
@@ -693,7 +718,8 @@ const OrderItem = ({ item, onQuantityChange, onRemove }) => {
   );
 };
 
-const PriceSummary = ({ items = [], shipping = 0 }) => {
+const PriceSummary = ({ items = [] }) => {
+  const shipping = items?.[0]?.shippingCharge;
   const summary = items.reduce(
     (acc, item) => {
       acc.subtotal +=
@@ -719,7 +745,7 @@ const PriceSummary = ({ items = [], shipping = 0 }) => {
     <div className="mt-4 bg-white rounded-xl border border-quaternary p-4 space-y-3 text-sm">
       {/* Subtotal */}
       <div className="flex justify-between text-gray-700">
-        <span>Subtotal (MRP)</span>
+        <span>MRP</span>
         <span className="font-medium">₹{summary.subtotal.toFixed(2)}</span>
       </div>
 
@@ -733,7 +759,7 @@ const PriceSummary = ({ items = [], shipping = 0 }) => {
 
       {/* After Discount */}
       <div className="flex justify-between text-gray-800">
-        <span>Price after discount</span>
+        <span>Discounted MRP</span>
         <span className="font-medium">₹{summary.afterDiscount.toFixed(2)}</span>
       </div>
 
@@ -751,7 +777,7 @@ const PriceSummary = ({ items = [], shipping = 0 }) => {
             FREE
           </span>
         ) : (
-          <span className="font-medium">₹{shipping.toFixed(2)}</span>
+          <span className="font-medium">₹{shipping?.toFixed(2)}</span>
         )}
       </div>
 

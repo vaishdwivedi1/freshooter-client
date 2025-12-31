@@ -8,6 +8,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/pagination";
 import { Autoplay } from "swiper/modules";
+import { useNavigate } from "react-router";
+import { cartEvents } from "../utils/commonFunctions";
 
 export default function Home() {
   const [productCat, setProductCat] = useState([]);
@@ -15,6 +17,7 @@ export default function Home() {
   const [bestSellingProducts, setBestSellingProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const navigate = useNavigate();
 
   // Fetch categories from API
   const getAllProductCategories = () => {
@@ -77,14 +80,14 @@ export default function Home() {
             `${StaticApi.searchProducts}?name=${encodeURIComponent(searchTerm)}`
           )
           .then((response) => {
-            // setSearchResults(response?.data?.products || []);
+            setSearchResults(response?.data?.products || []);
           })
           .catch((err) => {
             console.error("Failed to fetch product categories", err);
             // setSearchResults([]);
           });
       } else {
-        // setSearchResults([]);
+        setSearchResults([]);
       }
     }, 500); // 500ms debounce
 
@@ -93,6 +96,7 @@ export default function Home() {
   useEffect(() => {
     getAllProductCategories();
     getAllActivateProducts();
+    cartEvents.refresh();
   }, []);
 
   return (
@@ -160,7 +164,10 @@ export default function Home() {
       >
         {productCat.map((item) => (
           <SwiperSlide key={item.id}>
-            <div className="flex flex-col items-center justify-center text-center">
+            <div
+              onClick={() => navigate(`/category/${item.name}`)}
+              className="flex flex-col items-center justify-center text-center"
+            >
               <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 flex items-center justify-center rounded-full bg-white shadow-md p-2 cursor-pointer hover:bg-gradient-to-r from-tertiary to-primary hover:shadow-lg hover:text-white transition-all">
                 <div className="w-full h-full rounded-full overflow-hidden">
                   <img

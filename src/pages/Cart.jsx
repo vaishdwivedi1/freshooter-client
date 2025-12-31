@@ -258,7 +258,7 @@ export default function Cart() {
                         Qty: {item.quantity}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        Return eligible
+                        {item?.variantWeightValue} {item?.variantWeightUnit}
                       </p>
                     </div>
                     <div className="text-right">
@@ -336,7 +336,7 @@ export default function Cart() {
             </div>
             <div className="flex flex-col gap-2 text-sm">
               <div className="flex justify-between">
-                <span>Subtotal:</span>
+                <span>MRP:</span>
                 <span>₹{priceSummary.subTotal.toFixed(2)}</span>
               </div>
 
@@ -346,11 +346,20 @@ export default function Cart() {
               </div>
 
               <div className="flex justify-between">
+                <span>Discounted MRP:</span>
+                <span>
+                  ₹
+                  {priceSummary.subTotal.toFixed(2) -
+                    priceSummary.discount.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="flex justify-between">
                 <span>GST:</span>
                 <span>₹{priceSummary.gst.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Shipping Charges:</span>
+                <span>Delivery Charges:</span>
 
                 <span>₹{data?.totalShippingCharge}</span>
               </div>
