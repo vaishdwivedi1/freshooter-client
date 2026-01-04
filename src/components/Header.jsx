@@ -67,7 +67,7 @@ export default function Header() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/signin");
+    navigate("/");
   };
   const getCartItems = () => {
     services
@@ -230,12 +230,15 @@ export default function Header() {
                 ref={isProfileRef}
                 className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-50 top-[30px]"
               >
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => handleProfileNavigate(StaticRoutes.profile)}
-                >
-                  Profile
-                </button>
+                {localStorage.getItem("token") && (
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                    onClick={() => handleProfileNavigate(StaticRoutes.profile)}
+                  >
+                    Profile
+                  </button>
+                )}
+
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
                   onClick={() => handleProfileNavigate(StaticRoutes.orders)}

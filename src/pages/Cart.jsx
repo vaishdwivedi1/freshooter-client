@@ -110,6 +110,7 @@ export default function Cart() {
         ? prev.filter((k) => k !== variantKey)
         : [...prev, variantKey]
     );
+
   };
 
   /* ---------------- TOTAL ---------------- */
@@ -122,12 +123,11 @@ export default function Cart() {
         acc.subTotal += item.variantPrice * item.quantity;
         acc.discount += item.discountPrice || 0;
         acc.gst += item.gst || 0;
-        acc.shippingCharge += item.shippingCharge || 0;
 
         acc.payable +=
-          item.afterDiscountAmount +
-          (item.gst || 0) +
-          (item.shippingCharge || 0);
+          item.variantPrice * item.quantity -
+          (item.discountPrice || 0) +
+          (item.gst || 0);
 
         return acc;
       },
@@ -348,9 +348,7 @@ export default function Cart() {
               <div className="flex justify-between">
                 <span>Discounted MRP:</span>
                 <span>
-                  ₹
-                  {priceSummary.subTotal.toFixed(2) -
-                    priceSummary.discount.toFixed(2)}
+                  ₹{(priceSummary.subTotal - priceSummary.discount).toFixed(2)}
                 </span>
               </div>
 
@@ -358,10 +356,10 @@ export default function Cart() {
                 <span>GST:</span>
                 <span>₹{priceSummary.gst.toFixed(2)}</span>
               </div>
+
               <div className="flex justify-between">
                 <span>Delivery Charges:</span>
-
-                <span>₹{data?.totalShippingCharge}</span>
+                <span>₹{data?.totalShippingCharge.toFixed(2)}</span>
               </div>
 
               <hr />
@@ -369,13 +367,18 @@ export default function Cart() {
               <div className="flex justify-between text-base font-semibold">
                 <span>Total Payable:</span>
                 <span className="text-primary">
-                  ₹{priceSummary.payable.toFixed(2)}
+                  ₹
+                  {+priceSummary.payable.toFixed(2) + data?.totalShippingCharge}
                 </span>
               </div>
             </div>
 
             <button
-              className="mt-4 bg-primary hover:bg-secondary text-white py-2 rounded-md text-sm transition"
+              className={`mt-4 ${
+                selectedItems.length === 0
+                  ? "bg-gray-300"
+                  : "bg-primary hover:bg-secondary"
+              }  text-white py-2 rounded-md text-sm transition`}
               onClick={() => {
                 const selected = cartItems.filter((item) =>
                   selectedItems.includes(getVariantKey(item))

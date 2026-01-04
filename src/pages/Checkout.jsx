@@ -39,10 +39,26 @@ const Checkout = () => {
     state: "",
     postalCode: "",
     country: "India",
-    phone: "",
+    userNumber: "",
     userName: "",
     default: true,
   });
+
+  useEffect(() => {
+    if (showAddAddress && !isEditing) {
+      setNewAddress({
+        addressLine1: "",
+        addressLine2: "",
+        city: "",
+        state: "",
+        postalCode: "",
+        country: "India",
+        userNumber: "",
+        userName: "",
+        default: false,
+      });
+    }
+  }, [showAddAddress]);
 
   const isVariantInCart = (cartItems, item) => {
     return cartItems.some(
@@ -157,7 +173,7 @@ const Checkout = () => {
         if (editIndex === null && response.data?.addressId) {
           localStorage.setItem("recentlyAddedAddress", response.data.addressId);
         }
-        if (newAddress.default)
+        if (newAddress.default && !isEditing)
           handleSetDefaultAddress(response.data?.addressId);
 
         setShowAddAddress(false);
@@ -170,7 +186,7 @@ const Checkout = () => {
           state: "",
           postalCode: "",
           country: "India", // keep default country
-          phone: "",
+          userNumber: "",
           userName: "",
           default: false,
         });
@@ -252,6 +268,22 @@ const Checkout = () => {
     if (checkoutProducts.length === 1) {
       setWasLastItemDeleted(true);
     }
+  };
+
+  const calculatePrices = (item, newQty) => {
+    const totalPrice = item.variantPrice * newQty;
+    const discountPrice = (totalPrice * item.variantDiscount) / 100;
+    const afterDiscountAmount = totalPrice - discountPrice;
+
+    return {
+      ...item,
+      quantity: newQty,
+      totalPrice,
+      totalQtyPrice: totalPrice,
+      discountPrice,
+      afterDiscountAmount,
+      payingAmount: afterDiscountAmount / 2, // adjust if needed
+    };
   };
 
   useEffect(() => {
@@ -356,8 +388,9 @@ const Checkout = () => {
               if (newQty < 1) return;
 
               const updated = checkoutProducts.map((i) =>
-                i.productId === item.productId ? { ...i, quantity: newQty } : i
+                i.productId === item.productId ? calculatePrices(i, newQty) : i
               );
+
               setCheckoutProducts(updated);
               localStorage.setItem(
                 "selectedCheckoutItems",
@@ -367,28 +400,23 @@ const Checkout = () => {
               const change = newQty - item.quantity;
 
               if (change > 0) {
-                services
-                  .post(
-                    `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${change}&weightValue=${item.variantWeightValue}&weightUnit=${item.variantWeightUnit}`
-                  )
-                  .then(() => {})
-                  .catch(() => {});
+                services.post(
+                  `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${change}&weightValue=${item.variantWeightValue}&weightUnit=${item.variantWeightUnit}`
+                );
               } else {
-                services
-                  .delete(
-                    `${StaticApi.removeSingleItemCart}?productCode=${
-                      item.productCode
-                    }&quantity=${-change}&weightValue=${
-                      item.variantWeightValue
-                    }&weightUnit=${item.variantWeightUnit}`
-                  )
-                  .then(() => {})
-                  .catch(() => {});
+                services.delete(
+                  `${StaticApi.removeSingleItemCart}?productCode=${
+                    item.productCode
+                  }&quantity=${-change}&weightValue=${
+                    item.variantWeightValue
+                  }&weightUnit=${item.variantWeightUnit}`
+                );
               }
             }}
             onRemove={(item) => handleDeleteCheckoutItem(item.productId)}
           />
         ))}
+
         <PriceSummary items={checkoutProducts} />
         <div className="mt-6 w-max">
           <ButtonPrimary label="Place Order" handleOnClick={handlePayment} />
@@ -421,7 +449,7 @@ const Checkout = () => {
             <div className="px-6 py-4 overflow-y-auto flex-1 space-y-4">
               {[
                 ["Name", "userName"],
-                ["Phone", "phone"],
+                ["Phone", "userNumber"],
                 ["Address Line 1", "addressLine1"],
                 ["Address Line 2", "addressLine2"],
                 ["Postal Code", "postalCode"],
@@ -542,7 +570,20 @@ const Checkout = () => {
       {/* Card Modal */}
       {showCardModal && (
         <AddCardModal
-          onClose={() => setShowCardModal(false)}
+          onClose={() => {
+            setNewAddress({
+              addressLine1: "",
+              addressLine2: "",
+              city: "",
+              state: "",
+              postalCode: "",
+              country: "India", // keep default country
+              userNumber: "",
+              userName: "",
+              default: false,
+            });
+            setShowCardModal(false);
+          }}
           onSubmit={(cardData) => {
             setShowCardModal(false);
           }}
@@ -585,7 +626,7 @@ const AddressCard = ({
         <p>
           {address?.city}, {address?.state} - {address?.postalCode}
         </p>
-        <p className="text-sm text-gray-600">{address?.phone}</p>
+        <p className="text-sm text-gray-600">{address?.userNumber}</p>
 
         {address?.default ? (
           <span className="text-sm font-semibold text-green-600 mt-2 inline-block">

@@ -7,9 +7,15 @@ import { StaticApi } from "../utils/StaticApi";
 
 export default function Profile() {
   const [user, setUser] = useState({
-    name: "Vaishnavi Dwivedi",
-    email: "vaishnavi@example.com",
+    name: localStorage.getItem("userName"),
+    email: localStorage.getItem("email"),
     avatar: "https://i.pravatar.cc/150?img=32",
+  });
+
+  const [confirmAction, setConfirmAction] = useState({
+    open: false,
+    type: null, // "delete" | "default"
+    addressId: null,
   });
 
   const [addressList, setAddressList] = useState([]);
@@ -17,8 +23,8 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
   const [newAddress, setNewAddress] = useState({
-    name: "",
-    phone: "",
+    userName: "",
+    userNumber: "",
     addressLine1: "",
     addressLine2: "",
     city: "",
@@ -41,20 +47,24 @@ export default function Profile() {
   };
 
   const handleAddAddress = () => {
+    const payload = { ...newAddress };
     const apiCall =
       editIndex !== null
         ? services.put(
-            `${StaticApi.updateAddress}/${newAddress.addressId}`,
-            newAddress
+            `${StaticApi.updateAddress}/${payload.addressId}`,
+            payload
           )
-        : services.post(StaticApi.createAddress, newAddress);
+        : services.post(StaticApi.createAddress, payload);
 
     apiCall
-      .then(() => {
+      .then((response) => {
         getAllAddress();
+
+        if (newAddress?.default && !isEditing)
+          handleSetDefaultAddress(response.data?.addressId);
         setNewAddress({
-          name: "",
-          phone: "",
+          userName: "",
+          userNumber: "",
           addressLine1: "",
           addressLine2: "",
           city: "",
@@ -88,7 +98,7 @@ export default function Profile() {
 
   const handleLogout = () => {
     localStorage.clear();
-    navigate("/signin");
+    navigate("/");
   };
 
   const goToOrders = () => {
@@ -102,7 +112,7 @@ export default function Profile() {
       {/* User Info */}
       <div className="flex flex-col sm:flex-row items-center gap-6 bg-white shadow rounded-2xl p-6 mb-8">
         <div className="w-24 h-24 rounded-full bg-[#429686] flex items-center justify-center text-3xl font-bold text-white">
-          {user.name.charAt(0).toUpperCase()}
+          {user?.name?.charAt(0)?.toUpperCase()}
         </div>
         <div className="flex-1 text-center sm:text-left">
           <h2 className="text-xl font-semibold">{user.name}</h2>
@@ -117,8 +127,8 @@ export default function Profile() {
           <button
             onClick={() => {
               setNewAddress({
-                name: "",
-                phone: "",
+                userName: "",
+                userNumber: "",
                 addressLine1: "",
                 addressLine2: "",
                 city: "",
@@ -147,7 +157,7 @@ export default function Profile() {
               className="border rounded-lg p-4 flex justify-between items-start"
             >
               <div>
-                <p className="font-semibold">{addr.name}</p>
+                <p className="font-semibold">{addr.userName}</p>
                 <p>
                   {addr.addressLine1}, {addr.addressLine2}
                 </p>
@@ -155,7 +165,7 @@ export default function Profile() {
                   {addr.city}, {addr.state} - {addr.postalCode}
                 </p>
                 <p>{addr.country}</p>
-                <p className="text-sm text-gray-500">{addr.phone}</p>
+                <p className="text-sm text-gray-500">{addr.userNumber}</p>
                 {addr.default && (
                   <span className="text-green-600 text-sm font-medium mt-2 inline-block">
                     ★ Default
@@ -166,12 +176,19 @@ export default function Profile() {
               <div className="flex gap-2 mt-1 sm:mt-0">
                 {!addr.default && (
                   <button
-                    onClick={() => handleSetDefaultAddress(addr.addressId)}
+                    onClick={() =>
+                      setConfirmAction({
+                        open: true,
+                        type: "default",
+                        addressId: addr.addressId,
+                      })
+                    }
                     className="text-blue-600 text-sm hover:underline"
                   >
                     Set Default
                   </button>
                 )}
+
                 <button
                   onClick={() => {
                     setNewAddress(addr);
@@ -185,7 +202,13 @@ export default function Profile() {
                   <Pencil size={16} />
                 </button>
                 <button
-                  onClick={() => handleDeleteAddress(addr.addressId)}
+                  onClick={() =>
+                    setConfirmAction({
+                      open: true,
+                      type: "delete",
+                      addressId: addr.addressId,
+                    })
+                  }
                   className="text-red-600 hover:text-red-700"
                   title="Delete"
                 >
@@ -240,8 +263,8 @@ export default function Profile() {
             </h3>
             <div className="grid gap-3 max-h-[70vh] overflow-y-auto pr-2">
               {[
-                ["Name", "name"],
-                ["Phone", "phone"],
+                ["Name", "userName"],
+                ["Phone", "userNumber"],
                 ["Address Line 1", "addressLine1"],
                 ["Address Line 2", "addressLine2"],
                 ["City", "city"],
@@ -253,12 +276,12 @@ export default function Profile() {
                   key={key}
                   label={label}
                   value={newAddress[key]}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setNewAddress((prev) => ({
                       ...prev,
                       [key]: e.target.value,
-                    }))
-                  }
+                    }));
+                  }}
                 />
               ))}
               <label className="flex items-center gap-2">
@@ -282,6 +305,64 @@ export default function Profile() {
           </div>
         </div>
       )}
+
+      {confirmAction.open && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center">
+          <div className="bg-white rounded-xl w-full max-w-sm p-6">
+            <h3 className="text-lg font-semibold mb-2">
+              {confirmAction.type === "delete"
+                ? "Delete Address"
+                : "Set Default Address"}
+            </h3>
+
+            <p className="text-sm text-gray-600 mb-6">
+              {confirmAction.type === "delete"
+                ? "Are you sure you want to delete this address? This action cannot be undone."
+                : "Are you sure you want to set this address as your default address?"}
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() =>
+                  setConfirmAction({
+                    open: false,
+                    type: null,
+                    addressId: null,
+                  })
+                }
+                className="px-4 py-2 border rounded-md text-sm"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  if (confirmAction.type === "delete") {
+                    handleDeleteAddress(confirmAction.addressId);
+                  }
+
+                  if (confirmAction.type === "default") {
+                    handleSetDefaultAddress(confirmAction.addressId);
+                  }
+
+                  setConfirmAction({
+                    open: false,
+                    type: null,
+                    addressId: null,
+                  });
+                }}
+                className={`px-4 py-2 rounded-md text-sm text-white ${
+                  confirmAction.type === "delete"
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-primary hover:bg-secondary"
+                }`}
+              >
+                {confirmAction.type === "delete" ? "Delete" : "Set Default"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -291,7 +372,7 @@ const InputField = ({ label, value, onChange }) => (
     <label className="block text-sm font-medium mb-1">{label}</label>
     <input
       type="text"
-      value={value}
+      value={String(value)}
       onChange={onChange}
       placeholder={label}
       className="w-full border rounded px-3 py-2"

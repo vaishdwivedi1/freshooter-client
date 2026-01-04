@@ -96,11 +96,18 @@ export default function Wishlist() {
       const discountAmount = (item.price * item.discount) / 100;
       const afterDiscountAmount = item.price - discountAmount;
       const payingAmount = afterDiscountAmount * quantity;
-
-      await services.post(
-        `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${quantity}&weightValue=${item.weightValue}&weightUnit=${item.weightUnit}`
+      const isAlreadyInCart = cartItems?.some(
+        (cartItem) =>
+          cartItem.productCode === item.productCode &&
+          cartItem.variantWeightValue === item.weightValue &&
+          cartItem.variantWeightUnit === item.weightUnit
       );
 
+      if (!isAlreadyInCart) {
+        await services.post(
+          `${StaticApi.addToCart}?productCode=${item.productCode}&quantity=${quantity}&weightValue=${item.weightValue}&weightUnit=${item.weightUnit}`
+        );
+      }
       const checkoutItem = {
         productId: item.productId,
         productName: item.productName,

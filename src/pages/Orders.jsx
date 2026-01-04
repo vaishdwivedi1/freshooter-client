@@ -503,9 +503,9 @@ export default function Orders() {
                     </button>
                   </>
                 )}
-                <button className="border px-4 py-1.5 rounded-md text-sm hover:bg-gray-100">
+                {/* <button className="border px-4 py-1.5 rounded-md text-sm hover:bg-gray-100">
                   View Invoice
-                </button>
+                </button> */}
                 {order.orderStatus === "Shipped" && (
                   <button className="border px-4 py-1.5 rounded-md text-sm hover:bg-gray-100">
                     Track Package
@@ -721,63 +721,83 @@ export default function Orders() {
               {/* IMAGES */}
               <div>
                 <label className="font-medium text-sm">
-                  Upload Images (Max 5)
+                  Upload Images <span className="text-gray-400">(Max 5)</span>
                 </label>
 
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageUpload}
-                  className="mt-2 block w-full text-sm"
-                />
+                <div className="mt-3 grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {returnImages.map((img, idx) => (
+                    <div
+                      key={idx}
+                      className="relative group rounded-lg border overflow-hidden"
+                    >
+                      <img
+                        src={URL.createObjectURL(img)}
+                        alt="return"
+                        className="w-full h-24 object-cover"
+                      />
 
-                {returnImages.length > 0 && (
-                  <div className="flex gap-3 mt-3 flex-wrap">
-                    {returnImages.map((img, idx) => (
-                      <div key={idx} className="relative">
-                        <img
-                          src={URL.createObjectURL(img)}
-                          className="w-20 h-20 object-cover rounded-lg border"
-                        />
-                        <button
-                          onClick={() => removeImage(idx)}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center"
-                        >
-                          ✖
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      <button
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 bg-black/70 text-white rounded-full w-6 h-6 text-xs opacity-0 group-hover:opacity-100 transition"
+                      >
+                        ✖
+                      </button>
+                    </div>
+                  ))}
+
+                  {returnImages.length < 5 && (
+                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed rounded-lg cursor-pointer text-gray-400 hover:border-blue-500 hover:text-blue-500 transition">
+                      <span className="text-xl">＋</span>
+                      <span className="text-xs">Add</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-400 mt-2">
+                  Upload clear images showing the issue
+                </p>
               </div>
 
               {/* VIDEO */}
               <div>
                 <label className="font-medium text-sm">
-                  Upload Video (Optional)
+                  Upload Video <span className="text-gray-400">(Optional)</span>
                 </label>
 
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoUpload}
-                  className="mt-2 block w-full text-sm"
-                />
-
-                {returnVideo && (
-                  <div className="relative mt-3">
+                {!returnVideo ? (
+                  <label className="mt-3 flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer text-gray-400 hover:border-blue-500 hover:text-blue-500 transition">
+                    <span className="text-2xl">🎥</span>
+                    <span className="text-sm mt-1">Click to upload video</span>
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoUpload}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="mt-3 relative rounded-lg border overflow-hidden">
                     <video
                       src={URL.createObjectURL(returnVideo)}
                       controls
-                      className="w-full rounded-lg border"
+                      className="w-full max-h-60 object-cover"
                     />
-                    <button
-                      onClick={removeVideo}
-                      className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs rounded"
-                    >
-                      Remove
-                    </button>
+
+                    <div className="absolute top-2 right-2 flex gap-2">
+                      <button
+                        onClick={removeVideo}
+                        className="bg-red-500 text-white px-3 py-1 text-xs rounded"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
