@@ -231,25 +231,40 @@ export default function Header() {
                 className="absolute right-0 mt-2 w-40 bg-white text-black rounded shadow-lg z-50 top-[30px]"
               >
                 {localStorage.getItem("token") && (
-                  <button
-                    className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                    onClick={() => handleProfileNavigate(StaticRoutes.profile)}
-                  >
-                    Profile
-                  </button>
+                  <>
+                    <button
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfileNavigate(StaticRoutes.profile);
+                      }}
+                    >
+                      Profile
+                    </button>
+
+                    <button
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfileNavigate(StaticRoutes.orders);
+                      }}
+                    >
+                      Orders
+                    </button>
+                  </>
                 )}
 
                 <button
                   className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={() => handleProfileNavigate(StaticRoutes.orders)}
+                  onClick={
+                    localStorage.getItem("token")
+                      ? handleLogout
+                      : () => {
+                          navigate(StaticRoutes.signin);
+                        }
+                  }
                 >
-                  Orders
-                </button>
-                <button
-                  className="w-full text-left px-4 py-2 hover:bg-gray-100"
-                  onClick={handleLogout}
-                >
-                  Logout
+                  {localStorage.getItem("token") ? "Logout" : "LogIn"}
                 </button>
               </div>
             )}
